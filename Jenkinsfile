@@ -1,46 +1,33 @@
 pipeline {
-  agent any
-  environment {
-    DOCKERHUB_REPO = "yourdockerhubuser/simple-app"   // change this
-  }
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-    stage('Install & Build') {
-      steps {
-        sh 'npm install'
-      }
-    }
-    stage('Test') {
-      steps {
-        sh 'npm test || true'
-      }
-    }
-    stage('Docker Build') {
-      steps {
-        script {
-          sh "docker build -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} ."
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-      }
-    }
-    stage('Push to DockerHub') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-          sh "docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+        stage('Build') {
+            steps {
+                sh 'npm install'
+            }
         }
-      }
-    }
-    stage('Deploy') {
-      steps {
-        script {
-          sh "docker rm -f simple-app || true"
-          sh "docker run -d --name simple-app -p 3000:3000 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+        stage('Test') {
+            steps {
+                sh 'npm test || true'   // run tests if you have, ignore if none
+            }
         }
-      }
+        stage('Docker Build & Deploy') {
+            steps {
+                script {
+                    def image = "simple-app:${BUILD_NUMBER}"
+                    // Build Docker image
+                    sh "docker build -t ${image} ."
+                    // Stop old container if running
+                    sh "docker rm -f simple-app || true"
+                    // Run new container
+                    sh "docker run -d --name simple-app -p 3000:3000 ${image}"
+                }
+            }
+        }
     }
-  }
 }
