@@ -11,3 +11,4 @@ This is a simple Node.js application with a **CI/CD pipeline using GitHub Action
 ```bash
 npm install
 npm start
+ci/cd pipeline
