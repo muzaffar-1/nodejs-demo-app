@@ -9,6 +9,6 @@ This is a simple Node.js application with a **CI/CD pipeline using GitHub Action
 
 ### Run locally
 ```bash
-npm install
+npm install 
 npm start
 ci/cd pipeline
